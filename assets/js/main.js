@@ -3,12 +3,12 @@
   "use strict";
 
  //disable inspecting
-//  document.addEventListener('contextmenu', e => e.preventDefault());
-// document.addEventListener('keydown', e => {
-//   if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I')) {
-//     e.preventDefault();
-//   }
-// });
+ document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('keydown', e => {
+  if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I')) {
+    e.preventDefault();
+  }
+});
 
   function toggleScrolled() {
     const selectBody = document.querySelector('body');
@@ -227,12 +227,9 @@ document.getElementById('contactForm').addEventListener('submit', function (e) {
   const btnSuccess = btn.querySelector('.btn-success');
   const errorBox = form.querySelector('.error-message');
 
-  // Reset states
-  form.classList.remove('was-validated');
   errorBox.style.display = 'none';
   errorBox.textContent = '';
 
-  // Custom validation checks
   const name = document.getElementById('nameInput').value.trim();
   const email = document.getElementById('emailInput').value.trim();
   const subject = document.getElementById('subjectInput').value.trim();
@@ -246,42 +243,37 @@ document.getElementById('contactForm').addEventListener('submit', function (e) {
   if (message.length < 10) errors.push('Message must be at least 10 characters.');
 
   if (errors.length > 0) {
-    form.classList.add('was-validated');
     errorBox.style.display = 'block';
     errorBox.textContent = errors[0];
     return;
   }
 
-  // Show loading state inside button
   btn.disabled = true;
   btnText.classList.add('d-none');
   btnSuccess.classList.add('d-none');
   btnLoading.classList.remove('d-none');
 
-  // Send via fetch
   const formData = new FormData(form);
 
-  fetch(form.getAttribute('action'), {
+  fetch('https://api.web3forms.com/submit', {
     method: 'POST',
     body: formData,
-    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    headers: { 'Accept': 'application/json' }
   })
-    .then(response => response.text())
+    .then(response => response.json())
     .then(data => {
-      if (data.trim() === 'OK') {
-        // Success state inside button
+      if (data.success) {
         btnLoading.classList.add('d-none');
         btnSuccess.classList.remove('d-none');
         form.reset();
 
-        // Revert button back to normal after a few seconds
         setTimeout(() => {
           btnSuccess.classList.add('d-none');
           btnText.classList.remove('d-none');
           btn.disabled = false;
         }, 4000);
       } else {
-        throw new Error(data || 'Something went wrong. Please try again.');
+        throw new Error(data.message || 'Something went wrong. Please try again.');
       }
     })
     .catch(err => {
@@ -289,7 +281,7 @@ document.getElementById('contactForm').addEventListener('submit', function (e) {
       btnText.classList.remove('d-none');
       btn.disabled = false;
       errorBox.style.display = 'block';
-      errorBox.textContent = err.message || 'Failed to send message. Please try again later.';
+      errorBox.textContent = err.message;
     });
 });
 
